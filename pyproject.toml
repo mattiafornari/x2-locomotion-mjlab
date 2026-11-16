@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "x2-locomotion"
+version = "0.1.0"
+description = "Velocity-tracking humanoid locomotion for the AgiBot X2 Ultra (legs only) on mjlab / MuJoCo Warp, trained with RSL-RL PPO."
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+dependencies = [
+    # Pinned: mjlab is a fast-moving beta and pins mujoco / mujoco-warp / rsl-rl-lib itself.
+    "mjlab==1.6.1",
+]
+
+[project.optional-dependencies]
+# Pick exactly one torch build (same convention as mjlab): `uv sync --extra cu128` on the GPU box.
+cu128 = ["torch>=2.7.0"]
+cpu = ["torch>=2.7.0"]
+dev = ["pytest>=8", "ruff>=0.6"]
+deploy = ["onnxruntime>=1.19"]  # scripts/onnx_parity.py
+
+# mjlab discovers task packages through this entry-point group, so the stock `train` / `play`
+# CLIs see the X2 tasks without any fork or wrapper script.
+[project.entry-points."mjlab.tasks"]
+x2_locomotion = "x2_locomotion.tasks"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv]
+conflicts = [[{ extra = "cpu" }, { extra = "cu128" }]]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu128", extra = "cu128" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["third_party", "build"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]  # ruff format owns code wrapping; long docstring lines are fine
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: builds a full mjlab environment on CPU (needs the X2 submodule, ~1-2 min)"]

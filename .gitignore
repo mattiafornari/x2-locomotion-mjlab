@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+# training artefacts: only curated checkpoints are copied into models/
+logs/
+wandb/
+outputs/
+videos/
+*.mp4
+# warp kernel cache
+.warp_cache/
+MUJOCO_LOG.TXT
